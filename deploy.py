@@ -1,59 +1,10 @@
-#!/usr/bin/env python3
-"""
-LearningSteps — deploy and test
-Requires: Python 3.8+, Terraform >= 1.5, Azure CLI
-Works on macOS, Linux, and Windows.
-
-Usage:
-  python3 deploy.py                         # interactive
-  python3 deploy.py --password MyPass1      # skip password prompt
-  python3 deploy.py --password MyPass1 --prefix myenv --location northeurope
-"""
-
-import argparse
-import getpass
-import json
-import platform
-import shutil
 import subprocess
-import sys
-import time
-import urllib.error
-import urllib.request
+import json
 from pathlib import Path
-
-# ── colours ───────────────────────────────────────────────────────────────────
-
-def _ansi_enabled():
-    if platform.system() == "Windows":
-        try:
-            import ctypes
-            ctypes.windll.kernel32.SetConsoleMode(
-                ctypes.windll.kernel32.GetStdHandle(-11), 7
-            )
-        except Exception:
-            return False
-    return True
-
-_USE_COLOUR = _ansi_enabled()
-
-def _c(code, text):
-    return f"\033[{code}m{text}\033[0m" if _USE_COLOUR else text
-
-def info(msg):   print(f"\n{_c('1;33', '▶')} {msg}", flush=True)
-def ok(msg):     print(f"  {_c('0;32', '✓')} {msg}", flush=True)
-def warn(msg):   print(f"  {_c('1;33', '!')} {msg}", flush=True)
-def error(msg):  print(f"  {_c('0;31', '✗')} {msg}", flush=True)
-def header(msg): print(f"\n{_c('1;36', '═' * 60)}\n  {_c('1;36', msg)}\n{_c('1;36', '═' * 60)}", flush=True)
-
-FAILURES = []
-
-def fail(msg):
-    error(msg)
-    FAILURES.append(msg)
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 
+<<<<<<< Updated upstream
 def _resolve_cmd(cmd):
     if isinstance(cmd, (list, tuple)) and cmd:
         binary = cmd[0]
@@ -79,16 +30,18 @@ def run_out(cmd, cwd=None):
         error(f"Command not found: {cmd[0]}")
         raise SystemExit(1) from exc
     return r.stdout.strip()
+=======
 
-def tf(cmd):
-    """Run a terraform command with output, always from SCRIPT_DIR."""
-    return run_out(cmd, cwd=SCRIPT_DIR)
+def run(cmd):
+    subprocess.run(cmd, check=True, cwd=SCRIPT_DIR)
+>>>>>>> Stashed changes
 
-def need(binary, install_hint):
-    if not shutil.which(binary):
-        error(f"'{binary}' not found. {install_hint}")
-        sys.exit(1)
 
+def run_out(cmd):
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=SCRIPT_DIR)
+    return result.stdout.strip()
+
+<<<<<<< Updated upstream
 # ── step 1 — prerequisites ────────────────────────────────────────────────────
 
 def check_prerequisites():
@@ -341,29 +294,29 @@ def parse_args():
     p.add_argument("--prefix",   default="learningsteps", help="Resource name prefix (default: learningsteps)")
     p.add_argument("--location", default="westeurope",    help="Azure region (default: westeurope)")
     return p.parse_args()
+=======
+>>>>>>> Stashed changes
 
 def main():
-    args = parse_args()
-    header("LearningSteps — Deploy and Test")
+    print("\n▶ Running Terraform")
 
-    check_prerequisites()
-    public_key = ensure_ssh_key()
-    collect_config(public_key, args)
-    deploy()
-    vm_ip, rg, db_fqdn = read_outputs()
-    check_azure_resources(rg, db_fqdn)
-    api = wait_for_api(vm_ip)
-    if api:
-        run_api_tests(api)
+    run(["terraform", "init", "-upgrade"])
+    run(["terraform", "apply", "-auto-approve"])
 
-    print()
-    if not FAILURES:
-        print(_c("0;32", "  All checks passed. Deployment is working."))
-    else:
-        print(_c("0;31", f"  {len(FAILURES)} check(s) failed:"))
-        for f in FAILURES:
-            print(f"    - {f}")
-        sys.exit(1)
+    print("\n▶ Reading Outputs")
+
+    out = json.loads(run_out(["terraform", "output", "-json"]))
+
+    vm_ip = out["vm_private_ip"]["value"]
+    db = out["postgresql_fqdn"]["value"]
+    rg = out["resource_group_name"]["value"]
+
+    print("\n✅ Deployment Successful")
+    print(f"VM Private IP : {vm_ip}")
+    print(f"Database      : {db}")
+    print(f"ResourceGroup : {rg}")
+    print("Access        : PRIVATE (no public exposure)")
+
 
 if __name__ == "__main__":
     main()

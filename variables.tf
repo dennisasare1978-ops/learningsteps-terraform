@@ -38,3 +38,8 @@ variable "db_name" {
   type        = string
   default     = "learning_journal"
 }
+
+variable "my_ip" {
+  description = "Your public IP address for DB access"
+  type        = string
+}

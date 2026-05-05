@@ -1,12 +1,25 @@
+# Terraform
 .terraform/
 .terraform.lock.hcl
+*.tfstate
+*.tfstate.*
 terraform.tfvars
-terraform.tfstate
-terraform.tfstate.backup
-.learningsteps_key
-.learningsteps_key.pub
+
+# SSH Keys / Secrets
+.learningsteps_key*
+*.pem
+
+# Python
 __pycache__/
 *.pyc
+
+# OS
+.DS_Store
+
+# Editor / Local configs
 .claude/
+<<<<<<< Updated upstream
 SECURITY_ROADMAP.md
 .terraform.tfstate.lock.info
+=======
+>>>>>>> Stashed changes

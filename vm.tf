@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 resource "azurerm_public_ip" "vm" {
   name                = "pip-${var.prefix}-vm"
   location            = azurerm_resource_group.main.location
@@ -7,6 +8,8 @@ resource "azurerm_public_ip" "vm" {
   domain_name_label   = lower(var.prefix)
 }
 
+=======
+>>>>>>> Stashed changes
 resource "azurerm_network_interface" "vm" {
   name                = "nic-${var.prefix}-vm"
   location            = azurerm_resource_group.main.location
@@ -16,7 +19,6 @@ resource "azurerm_network_interface" "vm" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.app.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.vm.id
   }
 }
 
@@ -26,6 +28,9 @@ resource "azurerm_linux_virtual_machine" "vm" {
   resource_group_name = azurerm_resource_group.main.name
   size                = "Standard_D2s_v3"
   admin_username      = var.vm_admin_username
+  admin_password                  = "StrongPass123!"
+  disable_password_authentication = false
+
   network_interface_ids = [
     azurerm_network_interface.vm.id
   ]
