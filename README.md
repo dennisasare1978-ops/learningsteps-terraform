@@ -1,86 +1,92 @@
-# LearningSteps — Base Deployment
+# 🔐 LearningSteps – Secure Azure Private Architecture
 
-A one-command Azure deployment of the [LearningSteps](https://github.com/CyberstepsDE/learningsteps) API and a PostgreSQL database.
+This project demonstrates a secure, production-style Azure deployment using Terraform, based on Zero Trust networking principles.
 
-> **This deployment is intentionally minimal and unsecured.** The VM is publicly reachable, the database accepts connections from any IP, credentials are stored in plaintext, and there is no traffic inspection or monitoring. It is a starting point — not a production setup.
+Unlike a basic deployment, this architecture ensures that both the virtual machine and PostgreSQL database are completely private and not exposed to the public internet.
 
-## What Gets Deployed
+---
 
-- **Ubuntu VM** (Standard_D2s_v3) running the FastAPI application on port 8000
-- **Azure PostgreSQL Flexible Server** (B1ms) as the database
-- A virtual network with one subnet and a basic network security group
+## 🚀 Architecture Overview
 
-## Prerequisites
+* Azure Virtual Network (VNet)
+* Subnet with Network Security Group (NSG)
+* Linux Virtual Machine (no public IP)
+* Azure Bastion for secure SSH access
+* PostgreSQL Flexible Server (public access disabled)
+* Private Endpoint for database connectivity
+* Private DNS Zone for internal name resolution
 
-Install the following before running the script:
+---
 
-| Tool | Install |
-|---|---|
-| Python 3.8+ | [python.org](https://www.python.org/downloads/) — on Windows use `python`, on macOS/Linux use `python3` |
-| Terraform ≥ 1.5 | [developer.hashicorp.com/terraform/install](https://developer.hashicorp.com/terraform/install) |
-| Azure CLI | [learn.microsoft.com/en-us/cli/azure/install-azure-cli](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) |
-| Azure subscription | Your account needs **Contributor** or **Owner** role on the subscription |
+## 🔐 Security Features
 
-## Deploy
+* No public IP on the virtual machine (enforced via Azure Policy)
+* SSH access only through Azure Bastion
+* PostgreSQL database is not publicly accessible
+* Private Endpoint ensures database traffic stays inside the VNet
+* DNS resolves database hostname to private IP (10.x.x.x)
 
-```bash
-python3 deploy.py
-```
+---
 
-On Windows:
-```
-python deploy.py
-```
+## 🧪 Validation (Proof of Private Connectivity)
 
-The script will:
-1. Log you in to Azure if needed (opens a browser)
-2. Generate an SSH key pair in the project folder
-3. Ask for a resource prefix and Azure region (IMPORTANT - Make sure your prefix is unique and includes your name, otherwise the deployment will fail due to naming conflicts)
-4. Ask for a PostgreSQL admin password
-5. Run `terraform apply` — takes about 7–8 minutes
-6. Run a smoke test against the deployed API
-
-To skip the interactive prompts:
-```bash
-python3 deploy.py --password YourPassword1 --prefix learningstepsbob --location westeurope
-```
-
-Once deployed, the script prints the API URL and SSH command.
-
-## Stopping and Starting
-
-When not in use, deallocate the VM to avoid compute charges:
-```bash
-az vm deallocate --resource-group rg-<prefix> --name vm-<prefix>
-```
-
-Start it again:
-```bash
-az vm start --resource-group rg-<prefix> --name vm-<prefix>
-```
-
-Stop the database:
-```bash
-az postgres flexible-server stop --resource-group rg-<prefix> --name psql-<prefix>-<suffix>
-```
-
-Start it again:
-```bash
-az postgres flexible-server start --resource-group rg-<prefix> --name psql-<prefix>-<suffix>
-```
-
-> Note: Azure automatically restarts a stopped PostgreSQL Flexible Server after 7 days.
-
-To destroy everything permanently:
-```bash
-terraform destroy
-```
-
-## SSH Access
-
-The SSH key is generated in the project folder during deployment:
+Inside the VM:
 
 ```bash
-ssh azureuser@<vm-ip> -i .learningsteps_key
+nslookup psql-learningsteps-3i7fue.postgres.database.azure.com
 ```
 
+Result:
+
+```
+Address: 10.0.1.5
+```
+
+This confirms that all database communication is routed through the private network.
+
+---
+
+## 📸 Screenshots
+
+### 🔐 VM Access (Bastion)
+
+![VM](screenshots/vm-identity.png)
+
+### 🌐 Private IP Address
+
+![IP](screenshots/private-ip.png)
+
+### 🔥 Private DNS Resolution
+
+![DNS](screenshots/nslookup-private.png)
+
+---
+
+## 🛠️ Technologies Used
+
+* Terraform
+* Microsoft Azure
+* Azure CLI
+* Linux (Ubuntu)
+
+---
+
+## 🧠 Key Learnings
+
+* Designing secure cloud infrastructure using Terraform
+* Implementing Zero Trust architecture in Azure
+* Configuring and troubleshooting Private Endpoints
+* Working with Azure Policy restrictions (no public IP)
+* Ensuring secure database connectivity via Private DNS
+
+---
+
+## ⚠️ Security Note
+
+Sensitive files such as Terraform state, SSH keys, and credentials are excluded from this repository.
+
+---
+
+## 👤 Author
+
+Kwabena
